@@ -3,7 +3,7 @@
 **Apache RansomShield** é uma plataforma open-source para **prevenção, detecção em tempo real** e **resposta automática** a ataques ransomware em ambientes corporativos.
 
 Utiliza **Apache Kafka** para processar eventos de segurança em tempo real.  
-Já possui integração com **Apache Spark**, **Flask API**, e um **modelo de IA com TensorFlow** para detecção de ameaças.
+Possui integração com **Apache Spark**, **Flask API**, um modelo de **IA com TensorFlow** e um **dashboard React** para monitoramento visual de eventos classificados como ameaça.
 
 ---
 
@@ -26,10 +26,15 @@ apache-ransomshield/
 ├── scripts/
 │   ├── kafka_producer_test.py
 │   ├── generate_training_data.py
-│   └── train_model.py
+│   ├── train_model.py
+│   └── event_log.json
 ├── models/
 │   └── ransomshield_model.h5
-├── web-frontend/             # (em breve)
+├── web-frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── src/
+│   │   └── App.jsx
 ├── LICENSE
 └── README.md
 ```
@@ -38,15 +43,11 @@ apache-ransomshield/
 
 ## ⚙️ Requisitos
 
-- Docker e Docker Compose  
-- Python 3.8+  
-- pip e virtualenv  
-- Java 8 ou 11 (recomendado)  
-  - Verifique com: `java -version`  
-  - Defina JAVA_HOME se necessário:
-    ```bash
-    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-    ```
+- Docker e Docker Compose
+- Python 3.8+
+- pip e virtualenv
+- Java 8 ou 11
+- Node.js (para o dashboard React)
 
 ---
 
@@ -59,14 +60,16 @@ git clone https://github.com/josuebruno/apache-ransomshield.git
 cd apache-ransomshield
 ```
 
-### 2. Inicie Kafka + Zookeeper com Docker
+### 2. Suba Kafka + Zookeeper com Docker
 
 ```bash
 cd kafka
 docker-compose up -d
 ```
 
-### 3. Configure o ambiente virtual da API
+---
+
+### 3. Configure a API Python
 
 ```bash
 cd api
@@ -75,7 +78,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Inicie o Consumer Kafka (API Flask)
+---
+
+### 4. Inicie o consumidor Kafka com IA
 
 ```bash
 cd api
@@ -83,13 +88,17 @@ source venv/bin/activate
 python app/kafka_consumer.py
 ```
 
-### 5. Gere eventos com o Kafka Producer
+---
+
+### 5. Execute o producer para gerar eventos simulados
 
 ```bash
 python scripts/kafka_producer_test.py
 ```
 
-### 6. Inicie a análise com Apache Spark
+---
+
+### 6. Processamento com Apache Spark (stream)
 
 ```bash
 spark-submit \
@@ -97,12 +106,9 @@ spark-submit \
   spark_stream.py
 ```
 
-> Esse comando executa o Spark com o conector Kafka necessário para streaming.  
-> Certifique-se de que o Kafka esteja rodando e o Java instalado/configurado.
-
 ---
 
-### 7. Gerar dados de treino para IA
+### 7. Geração de dados para treino (IA)
 
 ```bash
 python scripts/generate_training_data.py
@@ -110,76 +116,97 @@ python scripts/generate_training_data.py
 
 ---
 
-### 8. Treinar modelo de IA (MLP com TensorFlow)
+### 8. Treinar modelo de IA com TensorFlow
 
 ```bash
 python scripts/train_model.py
 ```
 
-> O modelo será salvo em: `scripts/ransomshield_model.h5`
+> Modelo será salvo em `scripts/ransomshield_model.h5`
+
+---
+
+### 9. Iniciar a API Flask (para o dashboard)
+
+```bash
+cd api
+source venv/bin/activate
+python app/main.py
+```
+
+---
+
+### 10. Iniciar o dashboard React
+
+```bash
+cd web-frontend
+npm install
+npm run dev
+```
+
+Acesse o painel em: [http://localhost:5173](http://localhost:5173)
 
 ---
 
 ## ✅ Resultado Esperado
 
-- Terminal do **Producer**: envia eventos simulados
-- Terminal do **Consumer ou Spark**: exibe os eventos
-- IA treinada salva e pronta para uso
+- Producer envia eventos simulados.
+- Kafka Consumer classifica os eventos com IA.
+- Logs salvos no arquivo `scripts/event_log.json`.
+- Dashboard React exibe eventos em tempo real.
 
 ---
 
-## 💡 Exemplo de evento gerado
+## 💡 Exemplo de Evento
 
 ```json
 {
-  "timestamp": 1743363001.63,
+  "timestamp": 1743368209.8566306,
   "type": "unauthorized_access",
-  "details": "Evento gerado para teste"
+  "details": "Evento gerado para teste",
+  "status": "threat"
 }
 ```
 
 ---
 
-## 🧠 Sobre o Modelo de IA
+## 🧠 IA com TensorFlow
 
-O modelo atual é um **MLP simples (rede neural)** que classifica os eventos em `ameaça (1)` ou `normal (0)` com base no tipo de evento.
-
-- Treinado com `TensorFlow` e `scikit-learn`
-- Usa `one-hot encoding` dos tipos de evento
-- Pode ser facilmente re-treinado com eventos mais ricos no futuro
+- Rede neural MLP simples
+- Classificação binária (0 = normal, 1 = ameaça)
+- Treinada com tipos: `login_failure`, `unauthorized_access`, `file_modified`
+- Pode ser re-treinada com novos eventos
 
 ---
 
-## 📦 Escalabilidade futura
+## 🖥️ Dashboard React
 
-- ✅ IA já integrada e adaptável
-- 🔄 Em breve: dashboard em React
-- 🚨 Automação de resposta com agentes distribuídos
-- 📡 Suporte para coleta remota de eventos (via REST ou socket)
-- 📈 Possibilidade de salvar logs em bancos NoSQL (MongoDB, Elastic)
+- Leitura periódica do endpoint Flask `/api/events`
+- Interface com destaque de ameaças
+- Exibição em tempo real dos logs do Kafka
 
 ---
 
 ## 🧭 Roadmap do Projeto
 
 | Recurso                      | Status        |
-|------------------------------|----------------|
+|------------------------------|---------------|
 | Kafka integrado à API Flask | ✅ Pronto
 | Producer para testes         | ✅ Pronto
 | Análise com Apache Spark     | ✅ Em uso
 | IA com TensorFlow            | ✅ Treinada
-| Dashboard React              | 🖥️ Em breve
+| Dashboard React              | ✅ Em uso
 | Automação de resposta        | 🚨 Em breve
 
 ---
 
 ## 🤝 Como Contribuir
 
-1. Faça um fork  
-2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`  
-3. Commit: `git commit -m 'feat: nova funcionalidade'`  
-4. Push: `git push origin feature/nova-funcionalidade`  
-5. Abra um Pull Request  
+1. Faça um fork
+2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
+3. Commit: `git commit -m 'feat: nova funcionalidade'`
+4. Push: `git push origin feature/nova-funcionalidade`
+5. Abra um Pull Request
 
 ---
 
