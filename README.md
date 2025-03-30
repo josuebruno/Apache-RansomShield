@@ -8,24 +8,24 @@ Utiliza **Apache Kafka** para processar eventos de segurança em tempo real. Em 
 
 ## 📁 Estrutura do Projeto
 
-apache-ransomshield/
-├── api/
-│   ├── app/
-│   │   ├── main.py
-│   │   └── kafka_consumer.py
-│   ├── ml/
-│   │   └── detection.py
-│   ├── config/
-│   │   └── settings.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── kafka/
-│   └── docker-compose.yml
-├── scripts/
-│   └── kafka_producer_test.py
-├── web-frontend/             # (em breve)
-├── LICENSE
-└── README.md
+apache-ransomshield/  
+├── api/  
+│   ├── app/  
+│   │   ├── main.py  
+│   │   └── kafka_consumer.py  
+│   ├── ml/  
+│   │   └── detection.py  
+│   ├── config/  
+│   │   └── settings.py  
+│   ├── requirements.txt  
+│   └── Dockerfile  
+├── kafka/  
+│   └── docker-compose.yml  
+├── scripts/  
+│   └── kafka_producer_test.py  
+├── web-frontend/             # (em breve)  
+├── LICENSE  
+└── README.md  
 
 ---
 
@@ -34,6 +34,12 @@ apache-ransomshield/
 - Docker e Docker Compose  
 - Python 3.8+  
 - pip e virtualenv  
+- **Java 8 ou 11 (recomendado)**  
+  - Verifique com: `java -version`  
+  - Defina `JAVA_HOME` se necessário:  
+    ```bash
+    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    ```
 
 ---
 
@@ -41,28 +47,34 @@ apache-ransomshield/
 
 ### 1. Clone o projeto
 
-git clone https://github.com/seu-usuario/apache-ransomshield.git  
+```bash
+git clone https://github.com/josuebruno/apache-ransomshield.git
 cd apache-ransomshield
+```
 
 ---
 
 ### 2. Inicie Kafka + Zookeeper com Docker
 
-cd kafka  
+```bash
+cd kafka
 docker-compose up -d
+```
 
 Isso cria 2 containers:  
-Kafka (porta 9092)  
-Zookeeper (porta 2181)
+- Kafka (porta 9092)  
+- Zookeeper (porta 2181)  
 
 ---
 
 ### 3. Configure o ambiente virtual da API
 
-cd api  
-python3 -m venv venv  
-source venv/bin/activate  
+```bash
+cd api
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+```
 
 ---
 
@@ -70,13 +82,17 @@ pip install -r requirements.txt
 
 Em um terminal separado:
 
-cd api  
-source venv/bin/activate  
+```bash
+cd api
+source venv/bin/activate
 python app/kafka_consumer.py
+```
 
 Você verá:
 
+```
 Consumidor Kafka iniciado e aguardando eventos...
+```
 
 ---
 
@@ -84,29 +100,51 @@ Consumidor Kafka iniciado e aguardando eventos...
 
 Em outro terminal:
 
-pip install kafka-python  
+```bash
+pip install kafka-python
 python scripts/kafka_producer_test.py
+```
 
 Saída esperada:
 
+```
 Evento enviado: {'timestamp': ..., 'type': 'unauthorized_access', 'details': 'Evento gerado para teste'}
+```
+
+---
+
+### 6. Inicie a análise com Apache Spark
+
+Para processar os eventos do Kafka em tempo real com Apache Spark:
+
+```bash
+spark-submit \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 \
+  spark_stream.py
+```
+
+> Esse comando executa o Spark com o conector Kafka necessário para streaming.  
+> Certifique-se de que o Kafka esteja rodando e o Java instalado/configurado.
 
 ---
 
 ## ✅ Resultado Esperado
 
-Terminal do Producer: envia eventos simulados.  
-Terminal do Consumer: consome e imprime os eventos em tempo real.
+- Terminal do **Producer**: envia eventos simulados.  
+- Terminal do **Consumer** ou **Spark**: consome e imprime os eventos em tempo real.
 
 Exemplo:
 
+```
 Evento recebido pelo consumer: {'timestamp': ..., 'type': 'login_failure', 'details': 'Evento gerado para teste'}
+```
 
 ---
 
 ## 💡 Exemplo de código: Producer (scripts/kafka_producer_test.py)
 
-from kafka import KafkaProducer  
+```python
+from kafka import KafkaProducer
 import json, time, random
 
 producer = KafkaProducer(
@@ -125,12 +163,14 @@ while True:
     producer.send('security-events', event)
     print(f"Evento enviado: {event}")
     time.sleep(2)
+```
 
 ---
 
 ## 💡 Exemplo de código: Consumer (api/app/kafka_consumer.py)
 
-from kafka import KafkaConsumer  
+```python
+from kafka import KafkaConsumer
 import json
 
 def consume_kafka_events():
@@ -149,18 +189,19 @@ def consume_kafka_events():
 
 if __name__ == "__main__":
     consume_kafka_events()
+```
 
 ---
 
 ## 🧭 Roadmap do Projeto
 
-Recurso | Status  
---------|--------  
-Kafka integrado à API Flask | ✅ Pronto  
-Producer para testes | ✅ Pronto  
-Análise com Apache Spark | 🔄 Em desenvolvimento  
-Dashboard React | 🖥️ Em breve  
-Automação de resposta | 🚨 Em breve  
+| Recurso                      | Status        |
+|------------------------------|----------------|
+| Kafka integrado à API Flask | ✅ Pronto  
+| Producer para testes         | ✅ Pronto  
+| Análise com Apache Spark     | 🔄 Em desenvolvimento  
+| Dashboard React              | 🖥️ Em breve  
+| Automação de resposta        | 🚨 Em breve  
 
 ---
 
@@ -170,7 +211,7 @@ Automação de resposta | 🚨 Em breve
 2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`  
 3. Commit: `git commit -m 'feat: nova funcionalidade'`  
 4. Push: `git push origin feature/nova-funcionalidade`  
-5. Abra um Pull Request
+5. Abra um Pull Request  
 
 ---
 
@@ -180,4 +221,4 @@ Distribuído sob a licença Apache 2.0.
 
 ---
 
-Desenvolvido com ❤️ por [Josue Bruno]
+Desenvolvido com ❤️ por **Josue Bruno**
