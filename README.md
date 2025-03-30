@@ -180,4 +180,4 @@ Distribuído sob a licença Apache 2.0.
 
 ---
 
-Desenvolvido com ❤️ por [Seu Nome ou Equipe]
+Desenvolvido com ❤️ por [Josue Bruno]
